@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.10
 ARG AIRFLOW_USER_HOME=/opt/airflow
 ARG AIRFLOW_USER="airflow"
 ARG AIRFLOW_UID="1000"
@@ -13,8 +13,9 @@ RUN groupadd -g $AIRFLOW_GID airflow && \
     apt-get install -yqq wget && \
     apt-get install -yqq --no-install-recommends $buildDeps build-essential default-libmysqlclient-dev && \
     python -m pip install --upgrade pip && \
-    pip3 install --no-cache-dir 'apache-airflow[crypto,kubernetes,mysql]' && \
-    pip3 install --no-cache-dir 'pandas' && \
+    pip3 install --no-cache-dir \
+        'apache-airflow[crypto,kubernetes,mysql,pandas]==2.3.3' \
+        --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.3.3/constraints-3.10.txt" && \
     apt-get purge --auto-remove -yqq $buildDeps && \
     apt-get autoremove -yqq --purge && \
     rm -rf /var/lib/apt/lists/*
