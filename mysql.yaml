@@ -1,4 +1,48 @@
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.kubernetes.io/selected-node: microk8s-01
+    volume.kubernetes.io/storage-provisioner: microk8s.io/hostpath
+  name: mysql
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: microk8s-hostpath
+  volumeName: mysql
+  volumeMode: Filesystem
+
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mysql
+  namespace: default
+spec:
+  storageClassName: microk8s-hostpath
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 2Gi
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - microk8s-01
+  hostPath:
+    path: /var/snap/microk8s/common/default-storage/mysql
+    type: DirectoryOrCreate
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,6 +51,8 @@ metadata:
   name: mysql
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mysql
@@ -16,28 +62,33 @@ spec:
         app: mysql
     spec:
       nodeName: microk8s-01
+      # volumes:
+      #   - name: mysql
+      #     emptyDir:
+      #       sizeLimit: 500Mi
       volumes:
-        - name: mysql
-          emptyDir:
-            sizeLimit: 500Mi
+      - name: mysql
+        persistentVolumeClaim:
+          claimName: mysql
       containers:
       - name: mysql
-        image: mysql:8-debian
+        image: mysql:8-oracle
         ports:
-          - containerPort: 3306
+        - containerPort: 3306
         volumeMounts:
-          - name: mysql
-            mountPath: /var/lib/mysql
+        - name: mysql
+          mountPath: /var/lib/mysql
         env:
-          - name: MYSQL_ROOT_PASSWORD
-            value: "passw0rd"
-          - name: MYSQL_DATABASE
-            value: "airflow"
-          - name: MYSQL_USER
-            value: "airflow"
-          - name: MYSQL_PASSWORD
-            value: "airflow"
----        
+        - name: MYSQL_ROOT_PASSWORD
+          value: "passw0rd"
+        - name: MYSQL_DATABASE
+          value: "airflow"
+        - name: MYSQL_USER
+          value: "airflow"
+        - name: MYSQL_PASSWORD
+          value: "airflow"
+
+---
 apiVersion: v1
 kind: Service
 metadata:

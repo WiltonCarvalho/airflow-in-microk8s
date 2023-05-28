@@ -57,6 +57,7 @@ spec:
       labels:
         app: airflow
     spec:
+      nodeName: microk8s-01
       volumes:
       - name: airflow-dags
         persistentVolumeClaim:
@@ -67,7 +68,7 @@ spec:
       serviceAccountName: airflow
       initContainers:
       - name: "init"
-        image: localhost:32000/airflow:2.0
+        image: localhost:32000/airflow:latest
         imagePullPolicy: Always
         envFrom:
         - configMapRef:
@@ -80,11 +81,10 @@ spec:
               key: sql_alchemy_conn
         command: ["/bin/sh", "-c"]
         args:
-          - sudo chown airflow:airflow /opt/airflow/dags;
-            sudo chown airflow:airflow /opt/airflow/logs;
-            airflow db init;
-            airflow users create --username airflow --firstname airflow --lastname airflow --role Admin --password airflow --email admin@airflow.org;
-            /opt/airflow/scripts/install_oci_dag_templates.sh;
+          - |
+            set -ex
+            airflow db init
+            airflow users create --username airflow --firstname airflow --lastname airflow --role Admin --password airflow --email admin@airflow.org
         volumeMounts:
         - name: airflow-dags
           mountPath: /opt/airflow/dags
@@ -94,14 +94,14 @@ spec:
           runAsGroup: 0
       containers:
       - name: webserver
-        image: localhost:32000/airflow:2.0
-        imagePullPolicy: IfNotPresent
+        image: localhost:32000/airflow:latest
+        imagePullPolicy: Always
         command: ["airflow","webserver"]
         envFrom:
         - configMapRef:
             name: airflow-config
         env:
-        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+        - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
           valueFrom:
             secretKeyRef:
               name: airflow-secrets
@@ -114,8 +114,8 @@ spec:
         securityContext:
           runAsGroup: 0
       - name: scheduler
-        image: localhost:32000/airflow:2.0
-        imagePullPolicy: IfNotPresent
+        image: localhost:32000/airflow:latest
+        imagePullPolicy: Always
         command: ["airflow","scheduler"]
         envFrom:
         - configMapRef:

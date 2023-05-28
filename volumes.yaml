@@ -6,31 +6,13 @@ metadata:
   namespace: airflow
 provisioner: nfs.csi.k8s.io
 parameters:
-  server: 192.168.122.101
+  server: 192.168.122.229
   share: /srv/nfs
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 mountOptions:
   - hard
   - nfsvers=4.1
-# ---
-# kind: PersistentVolume
-# apiVersion: v1
-# metadata:
-#   name: airflow-dags
-#   namespace: airflow
-# spec:
-#   storageClassName: nfs-airflow
-#   accessModes:
-#     - ReadOnlyMany
-#   capacity:
-#     storage: 2Gi
-#   mountOptions:
-#     - nosuid
-#   nfs:
-#     server: 192.168.122.101
-#     path: "/airflow-dags"
-#     readOnly: false
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -44,25 +26,26 @@ spec:
   resources:
     requests:
       storage: 2Gi
-#  volumeName: airflow-dags
-# ---
-# kind: PersistentVolume
-# apiVersion: v1
-# metadata:
-#   name: airflow-logs
-#   namespace: airflow
-# spec:
-#   storageClassName: nfs-airflow
-#   accessModes:
-#     - ReadOnlyMany
-#   capacity:
-#     storage: 2Gi
-#   mountOptions:
-#     - nosuid
-#   nfs:
-#     server: 192.168.122.101
-#     path: "/airflow-logs"
-#     readOnly: false
+  volumeName: airflow-dags
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: airflow-dags
+  namespace: airflow
+spec:
+  storageClassName: nfs-airflow
+  accessModes:
+    - ReadOnlyMany
+  capacity:
+    storage: 2Gi
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+  nfs:
+    server: 192.168.122.229
+    path: "/srv/nfs/airflow-dags"
+    readOnly: false
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -76,4 +59,23 @@ spec:
   resources:
     requests:
       storage: 2Gi
-#  volumeName: airflow-logs
+  volumeName: airflow-logs
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: airflow-logs
+  namespace: airflow
+spec:
+  storageClassName: nfs-airflow
+  accessModes:
+    - ReadOnlyMany
+  capacity:
+    storage: 2Gi
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+  nfs:
+    server: 192.168.122.229
+    path: "/srv/nfs/airflow-logs"
+    readOnly: false

@@ -10,7 +10,7 @@ spec:
       env:
         - name: AIRFLOW__CORE__EXECUTOR
           value: "KubernetesExecutor"
-        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+        - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
           valueFrom:
             secretKeyRef:
               name: airflow-secrets
