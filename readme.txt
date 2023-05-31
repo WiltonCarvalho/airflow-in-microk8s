@@ -53,12 +53,16 @@ microk8s join 192.168.122.179:25000/d15bd74a849c87708f473bae67f0fb87/99cee66a0d4
 
 multipass exec microk8s-01 -- sudo microk8s config > ~/.kube/config
 
+# Bastion
 sudo curl -fsSL https://dl.k8s.io/release/v1.26.4/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+curl -fsSL https://get.helm.sh/helm-v3.8.1-linux-amd64.tar.gz | \
+  sudo tar zxvf - -C "/usr/local/bin" linux-amd64/helm --strip-components 1
 
 kubectl get nodes
 
 kubectl label node microk8s-01 node-role.kubernetes.io/control-plane=control-plane
 kubectl label node microk8s-02 node-role.kubernetes.io/worker=worker
+
 kubectl taint node microk8s-01 node-role.kubernetes.io/control-plane:NoSchedule
 
 kubectl create deployment httpd --image=httpd --port=80 \
